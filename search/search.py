@@ -133,18 +133,88 @@ def depth_first_search(problem):
     print("Start's successors:", problem.get_successors(problem.get_start_state()))
     """
     "*** YOUR CODE HERE ***"
-    util.raise_not_defined()
+    stack = util.Stack()  #We create an empty stack.
+    frontier=problem.get_start_state() #We get the initial state of problem.
+    stack.push([frontier, 0, []]) #We put into stack the initial state, the initial cost and the empty list of actions.
+
+    expandedNodes = [] #This empty list will be used to store the states that we have visited. 
+
+    while stack:
+        [n, cost, action] = stack.pop() #We get the node, the cost and the actions that we can do.
+
+        if problem.is_goal_state(n): #Check if n node is the goal state.
+            return action
+
+        if not n in expandedNodes: #Check if n is not in expandedNodes
+            expandedNodes.append(n) 
+            successors = problem.get_successors(n) #We get the sucessors of the node.
+
+            for n_successor, action_sucessor, cost_sucessor in successors:
+                if n_successor not in expandedNodes:
+                    new_cost = cost + cost_sucessor #We add the cost_sucessor to next node.
+                    new_action = action + [action_sucessor]
+                    stack.push([n_successor, new_cost, new_action]) # Push unvisited successor states onto the stack
+    
+    print("Start:", problem.get_start_state())
+    print("Is the start a goal?", problem.is_goal_state(problem.get_start_state()))
+    print("Start's successors:", problem.get_successors(problem.get_start_state()))
+
+    util.raiseNotDefined() 
 
 
 
 def breadth_first_search(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raise_not_defined()
+    Queue = util.Queue() #Instead of stack, we use a queue
+    frontier=problem.get_start_state()
+    Queue.push([frontier, 0, []]) 
+
+    expandedNodes = []
+
+    while Queue:
+        [n, cost, action] = Queue.pop()
+
+        if problem.is_goal_state(n):
+            return action
+
+        if not n in expandedNodes:
+            expandedNodes.append(n)
+            successors = problem.get_successors(n)
+
+            for n_successor, action_sucessor, cost_sucessor in successors:
+                if n_successor not in expandedNodes:
+                    new_cost = cost + cost_sucessor
+                    new_action = action + [action_sucessor]
+                    Queue.push([n_successor, new_cost, new_action])
+
+    util.raiseNotDefined() 
 
 def uniform_cost_search(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
+    PQueue = util.PriorityQueue() #Instead of Queue, we use PQueue
+    frontier=problem.get_start_state()
+    PQueue.push([frontier, 0, []],0) # Push the initial state into the priority queue with cost 0 and an empty action list
+
+    expandedNodes = []
+
+    while PQueue:
+        [n, cost, action] = PQueue.pop()
+
+        if problem.is_goal_state(n):
+            return action
+
+        if not n in expandedNodes:
+            expandedNodes.append(n)
+            successors = problem.get_successors(n)
+
+            for n_successor, action_sucessor, cost_sucessor in successors:
+                if n_successor not in expandedNodes:
+                    new_cost = cost + cost_sucessor
+                    new_action = action + [action_sucessor]
+                    # Push the successor node into the priority queue with its new cost as the priority
+                    PQueue.push([n_successor, new_cost, new_action],new_cost)
     util.raise_not_defined()
 
 def null_heuristic(state, problem=None):
@@ -157,6 +227,28 @@ def null_heuristic(state, problem=None):
 def a_star_search(problem, heuristic=null_heuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
+    PQueue = util.PriorityQueue()
+    frontier=problem.get_start_state()
+    PQueue.push([frontier, 0, []], 0) # Push the initial state into the priority queue with cost 0 and an empty action list
+
+    expandedNodes = []
+
+    while PQueue:
+        [n, cost, action] = PQueue.pop()
+
+        if problem.is_goal_state(n):
+            return action
+
+        if not n in expandedNodes:
+            expandedNodes.append(n)
+            successors = problem.get_successors(n)
+
+            for n_successor, action_sucessor, cost_sucessor in successors:
+                if n_successor not in expandedNodes:
+                    new_cost = cost + cost_sucessor
+                    new_action = action + [action_sucessor]
+                    # Push the successor node into the priority queue with its combined cost as the priority
+                    PQueue.update([n_successor, new_cost, new_action],new_cost+heuristic(n_successor,problem))
     util.raise_not_defined()
 
 # Abbreviations
