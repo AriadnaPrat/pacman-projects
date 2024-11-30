@@ -51,7 +51,7 @@ class ReflexAgent(Agent):
 
         return legal_moves[chosen_index]
 
-    def evaluation_function(self, current_game_state, action):
+    def evaluation_function(self, current_game_state, action): ######################## QUESTION 1 ##############################
         """
         Design a better evaluation function here.
 
@@ -74,7 +74,36 @@ class ReflexAgent(Agent):
         new_scared_times = [ghostState.scared_timer for ghostState in new_ghost_states]
         
         "*** YOUR CODE HERE ***"
-        return successor_game_state.get_score()
+        coord_ghost = set()
+        for ghost_iter in new_ghost_states:
+            coord_ghost.add(ghost_iter.get_position())
+
+        # if not new ScaredTimes new state is ghost: return lowest value
+        if new_scared_times[0]<= 0:
+            if new_pos in coord_ghost:
+                return -1
+
+        #If newPos in the food, return the highest value
+        if new_pos in current_game_state.get_food().as_list():
+            return 1
+        
+        min_food_distance, min_ghost_distance=float('Inf'), float('Inf')
+        new_food_list=new_food.as_list()
+        for i in new_food_list:
+            d = util.manhattan_distance(i, new_pos)
+            if min_food_distance>d:
+                min_food_distance=d 
+
+        for i in coord_ghost:
+            d = util.manhattan_distance(i, new_pos)
+            if d < min_ghost_distance:
+                min_ghost_distance = d
+        
+        if min_food_distance>0:
+            return 1.0/min_food_distance - 1.0/min_ghost_distance
+        else:
+            return 1.0/min_food_distance + 1.0/min_ghost_distance
+    
 
 def score_evaluation_function(current_game_state):
     """
@@ -136,6 +165,56 @@ class MinimaxAgent(MultiAgentSearchAgent):
         Returns whether or not the game state is a losing state
         """
         "*** YOUR CODE HERE ***"
+        def max_value(state, depth, agentIndex):
+            # Check if the game is in a terminal state or the depth limit is reached
+            if state.is_win() or state.is_lose() or depth == 0:
+                return self.evaluation_function(state)  # Return the evaluation score
+
+            v = -float('Inf')  # Initialize v to negative infinity
+            legal_actions = state.get_legal_actions(agentIndex)
+
+            # Iterate through legal actions
+            for action in legal_actions:
+                successor = state.generate_successor(agentIndex, action)
+                # Recursively call minValue for the next level in the game tree
+                v = max(v, min_value(successor, depth, agentIndex + 1))
+            
+            return v
+        
+        def min_value(state, depth, agentIndex):
+            # Check if the game is in a terminal state or the depth limit is reached
+            if state.is_win() or state.is_lose() or depth == 0:
+                return self.evaluation_function(state)  # Return the evaluation score
+
+            v = float('Inf')  # Initialize v to positive infinity
+            legalActions = state.get_legal_actions(agentIndex)
+
+            # Iterate through legal actions
+            for action in legalActions:
+                successor = state.generate_successor(agentIndex, action)
+                
+                if agentIndex == state.get_num_agents() - 1:  # Last ghost agent
+                    # Recursively call maxValue for the next level in the game tree
+                    v = min(v, max_value(successor, depth - 1, 0))
+                else:
+                    # Recursively call minValue for the next ghost agent
+                    v = min(v, min_value(successor, depth, agentIndex + 1))
+            return v
+        
+        pacmanLegalActions = game_state.get_legal_actions(0)
+            
+        bestAction = 0
+        bestValue = -float('Inf')
+        for action in pacmanLegalActions:
+            new_succesor=game_state.generate_successor(0, action)
+            value = min_value(new_succesor, self.depth, 1)
+                
+            # Update the best action and value if a better one is found
+            if value > bestValue:
+                bestValue = value
+                bestAction = action
+
+        return bestAction
         util.raise_not_defined()
     
 
@@ -149,6 +228,45 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
         Returns the minimax action using self.depth and self.evaluation_function
         """
         "*** YOUR CODE HERE ***"
+        def max_value(state, depth, alpha, beta):
+            if depth == 0 or state.is_win() or state.is_lose():
+                return self.evaluation_function(state), None  # Return evaluation score and no action
+
+            v = -float('Inf')  # Initialize v to negative infinity
+            action = None
+            for a in state.get_legal_actions(0):  # Assuming 0 is the maximizing player index
+                successor = state.generate_successor(0, a)
+                score, _ = min_value(successor, depth, 1, alpha, beta)
+                if score > v:
+                    v = score
+                    action = a
+                if v > beta:
+                    return v, action  # Prune the search if v is greater than beta
+                alpha = max(alpha, v)
+            return v, action
+
+        def min_value(state, depth, agent_index, alpha, beta):
+            if depth == 0 or state.is_win() or state.is_lose():
+                return self.evaluation_function(state), None  # Return evaluation score and no action
+
+            v = float('Inf')  # Initialize v to positive infinity
+            action = None
+            for a in state.get_legal_actions(agent_index):
+                successor = state.generate_successor(agent_index, a)
+                if agent_index == state.get_num_agents() - 1:
+                    score, _ = max_value(successor, depth - 1, alpha, beta)
+                else:
+                    score, _ = min_value(successor, depth, agent_index + 1, alpha, beta)
+                if score < v:
+                    v = score
+                    action = a
+                if v < alpha:
+                    return v, action  # Prune the search if v is less than alpha
+                beta = min(beta, v)
+            return v, action
+
+        _, action = max_value(game_state, self.depth, -float('Inf'), float('Inf'))
+        return action
         util.raise_not_defined()
 
 
@@ -164,7 +282,8 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        "*** YOUR CODE HERE ***"
+        "*** YOUR CODE HERE ***"c
+        
         util.raise_not_defined()
 
 def better_evaluation_function(current_game_state):
