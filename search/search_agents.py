@@ -294,21 +294,23 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
-
+        
     def get_start_state(self):
         """
         Returns the start state (in your state space, not the full Pacman state
         space)
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        util.raiseNotDefined()
+
 
     def is_goal_state(self, state):
         """
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        util.raise_not_defined()
+        util.raiseNotDefined()
+
 
     def get_successors(self, state):
         """
@@ -331,6 +333,7 @@ class CornersProblem(search.SearchProblem):
             #   hits_wall = self.walls[next_x][next_y]
 
             "*** YOUR CODE HERE ***"
+
 
         self._expanded += 1 # DO NOT CHANGE
         return successors
@@ -532,7 +535,16 @@ def food_heuristic(state, problem):
     """
     position, food_grid = state
     "*** YOUR CODE HERE ***"
-    return 0
+    food_list=food_grid.as_list()
+    list_cost=[]
+    if not food_list:
+        return 0  
+
+    # Calculate the sum of Manhattan distances to all remaining food.
+    for food_iter in food_list:
+        list_cost.append(maze_distance(position, food_iter, problem.starting_game_state))
+
+    return max(list_cost)
 
 
 def simplified_corners_heuristic(state, problem):
